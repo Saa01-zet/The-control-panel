@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель управления пользователями</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Управление пользователями</h1>
+
+        <div id="messageBox"></div>
+
+        <div class="buttons">
+            <button onclick="getUsers()">🔄 Получить пользователей</button>
+            <button onclick="showCards()">📇 Карточками</button>
+            <button onclick="showTable()">📊 Таблицей</button>
+            <button onclick="getCount()">👥 Показать количество</button>
+        </div>
+
+        <div class="forms">
+            <div class="form">
+                <h3>➕ Создать пользователя</h3>
+                <input type="text" id="newName" placeholder="Логин">
+                <input type="password" id="newPass" placeholder="Пароль (мин 6)">
+                <select id="newRole">
+                    <option value="user">Пользователь</option>
+                    <option value="admin">Администратор</option>
+                </select>
+                <button onclick="createUser()">Сохранить</button>
+            </div>
+
+            <div class="form">
+                <h3>🔍 Найти по ID</h3>
+                <input type="number" id="searchId" placeholder="ID">
+                <button onclick="searchById()">Найти</button>
+                <div id="searchIdResult"></div>
+            </div>
+
+            <div class="form">
+                <h3>🔑 Изменить пароль</h3>
+                <input type="number" id="changeId" placeholder="ID пользователя">
+                <input type="password" id="changePass" placeholder="Новый пароль">
+                <button onclick="changePassword()">Изменить</button>
+            </div>
+
+            <div class="form">
+                <h3>🗑️ Удалить пользователя</h3>
+                <input type="number" id="deleteId" placeholder="ID пользователя">
+                <button onclick="deleteUser()">Удалить</button>
+            </div>
+
+            <div class="form">
+                <h3>🔎 Поиск по логину</h3>
+                <input type="text" id="searchText" placeholder="Логин или его часть">
+                <button onclick="searchByText()">Искать</button>
+                <div id="searchTextResult"></div>
+            </div>
+        </div>
+
+        <div class="list">
+            <h3>👥 Список пользователей</h3>
+            <div id="usersList">Нажмите "Получить пользователей"</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
