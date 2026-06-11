@@ -2,65 +2,48 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Панель управления пользователями</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление пользователями</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-theme="light">
     <div class="container">
-        <h1>📋 Управление пользователями</h1>
-
-        <div id="messageBox"></div>
-
-        <div class="buttons">
-            <button onclick="getUsers()">🔄 Получить пользователей</button>
-            <button onclick="showCards()">📇 Карточками</button>
-            <button onclick="showTable()">📊 Таблицей</button>
-            <button onclick="getCount()">👥 Показать количество</button>
+        <div class="header">
+            <h1>👥 Управление пользователями</h1>
+            <div class="header-buttons">
+                <button id="themeBtn" class="theme-btn">🌙 Темная тема</button>
+                <button id="sortAscBtn" class="sort-btn">Сортировать А-Я</button>
+                <button id="sortDescBtn" class="sort-btn">Сортировать Я-А</button>
+            </div>
         </div>
 
-        <div class="forms">
-            <div class="form">
-                <h3>➕ Создать пользователя</h3>
-                <input type="text" id="newName" placeholder="Логин">
-                <input type="password" id="newPass" placeholder="Пароль (мин 6)">
-                <select id="newRole">
+        <!-- Блок сообщений -->
+        <div id="messageBox" class="message-box"></div>
+
+        <!-- Форма создания -->
+        <div class="form-card">
+            <h2>➕ Создать пользователя</h2>
+            <div class="form-group">
+                <input type="text" id="createName" placeholder="Логин">
+                <input type="password" id="createPass" placeholder="Пароль (мин 6)">
+                <select id="createRole">
                     <option value="user">Пользователь</option>
                     <option value="admin">Администратор</option>
                 </select>
-                <button onclick="createUser()">Сохранить</button>
-            </div>
-
-            <div class="form">
-                <h3>🔍 Найти по ID</h3>
-                <input type="number" id="searchId" placeholder="ID">
-                <button onclick="searchById()">Найти</button>
-                <div id="searchIdResult"></div>
-            </div>
-
-            <div class="form">
-                <h3>🔑 Изменить пароль</h3>
-                <input type="number" id="changeId" placeholder="ID пользователя">
-                <input type="password" id="changePass" placeholder="Новый пароль">
-                <button onclick="changePassword()">Изменить</button>
-            </div>
-
-            <div class="form">
-                <h3>🗑️ Удалить пользователя</h3>
-                <input type="number" id="deleteId" placeholder="ID пользователя">
-                <button onclick="deleteUser()">Удалить</button>
-            </div>
-
-            <div class="form">
-                <h3>🔎 Поиск по логину</h3>
-                <input type="text" id="searchText" placeholder="Логин или его часть">
-                <button onclick="searchByText()">Искать</button>
-                <div id="searchTextResult"></div>
+                <button id="createBtn">Создать</button>
             </div>
         </div>
 
-        <div class="list">
-            <h3>👥 Список пользователей</h3>
-            <div id="usersList">Нажмите "Получить пользователей"</div>
+        <!-- Поиск -->
+        <div class="search-card">
+            <h2>🔍 Поиск пользователя</h2>
+            <input type="text" id="searchInput" placeholder="Введите логин...">
+        </div>
+
+        <!-- Список пользователей карточками -->
+        <div class="users-section">
+            <h2>📋 Пользователи</h2>
+            <div id="usersContainer" class="users-cards"></div>
         </div>
     </div>
 

@@ -1,102 +1,89 @@
 const API = "http://127.0.0.1:8000";
 let users = [];
-let viewMode = "cards";
+let searchTerm = "";
+let sortOrder = "none"; // none, asc, desc
 
-function showMessage(msg, isError = false) {
-    const box = document.getElementById("messageBox");
-    box.innerHTML = `<div class="${isError ? 'error' : 'success'}">${msg}</div>`;
-    setTimeout(() => box.innerHTML = "", 3000);
+// Элементы
+const usersContainer = document.getElementById("usersContainer");
+const searchInput = document.getElementById("searchInput");
+const createBtn = document.getElementById("createBtn");
+const themeBtn = document.getElementById("themeBtn");
+const sortAscBtn = document.getElementById("sortAscBtn");
+const sortDescBtn = document.getElementById("sortDescBtn");
+const messageBox = document.getElementById("messageBox");
+
+// ========== СООБЩЕНИЯ ==========
+function showMessage(text, isError = false) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `message ${isError ? "error" : "success"}`;
+    msgDiv.innerHTML = isError ? `❌ ${text}` : `✅ ${text}`;
+    messageBox.appendChild(msgDiv);
+    setTimeout(() => msgDiv.remove(), 3000);
 }
 
-async function getUsers() {
+// ========== ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ==========
+async function loadUsers() {
     try {
         const resp = await fetch(`${API}/users`);
+        if (!resp.ok) throw new Error("Ошибка загрузки");
         users = await resp.json();
-        if (viewMode === "cards") showCards();
-        else showTable();
+        renderUsers();
     } catch (err) {
-        showMessage("Ошибка: сервер не запущен", true);
+        showMessage("Сервер не запущен", true);
     }
 }
 
-function showCards() {
-    viewMode = "cards";
-    if (!users.length) {
-        document.getElementById("usersList").innerHTML = "<p>Нет пользователей</p>";
+// ========== ОТРИСОВКА КАРТОЧЕК (Задание 1) ==========
+function renderUsers() {
+    let filteredUsers = [...users];
+
+    // Фильтрация (Задание 7)
+    if (searchTerm) {
+        filteredUsers = filteredUsers.filter(u =>
+            u.username.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+
+    // Сортировка (Задание 8)
+    if (sortOrder === "asc") {
+        filteredUsers.sort((a, b) => a.username.localeCompare(b.username));
+    } else if (sortOrder === "desc") {
+        filteredUsers.sort((a, b) => b.username.localeCompare(a.username));
+    }
+
+    if (filteredUsers.length === 0) {
+        usersContainer.innerHTML = '<div class="empty-state">📭 Нет пользователей</div>';
         return;
     }
-    let html = '<div class="cards">';
-    for (let u of users) {
+
+    let html = "";
+    for (let u of filteredUsers) {
         html += `
-            <div class="card">
-                <strong>${u.username}</strong><br>
-                ID: ${u.id}<br>
-                Роль: ${u.role === 'admin' ? 'Админ' : 'Пользователь'}<br>
-                <button onclick="quickDelete(${u.id})" style="background:#dc3545">Удалить</button>
-                <button onclick="quickChange(${u.id})">Сменить пароль</button>
+            <div class="user-card">
+                <h3>${escapeHtml(u.username)}</h3>
+                <p>🆔 ID: ${u.id}</p>
+                <p>👤 Роль: <span class="role">${u.role === "admin" ? "Админ" : "Пользователь"}</span></p>
+                <div class="actions">
+                    <button class="delete-btn" onclick="deleteUserById(${u.id})">🗑️ Удалить</button>
+                    <button class="edit-btn" onclick="openChangePass(${u.id})">🔑 Изменить</button>
+                </div>
             </div>
         `;
     }
-    html += '</div>';
-    document.getElementById("usersList").innerHTML = html;
+    usersContainer.innerHTML = html;
 }
 
-function showTable() {
-    viewMode = "table";
-    if (!users.length) {
-        document.getElementById("usersList").innerHTML = "<p>Нет пользователей</p>";
-        return;
-    }
-    let html = `<table><th>ID</th><th>Логин</th><th>Роль</th><th>Действия</th>`;
-    for (let u of users) {
-        html += `
-            <tr>
-                <td>${u.id}</td>
-                <td>${u.username}</td>
-                <td>${u.role === 'admin' ? 'Админ' : 'Пользователь'}</td>
-                <td>
-                    <button onclick="quickDelete(${u.id})" style="background:#dc3545">Удалить</button>
-                    <button onclick="quickChange(${u.id})">Сменить пароль</button>
-                </td>
-            </tr>
-        `;
-    }
-    html += `</table>`;
-    document.getElementById("usersList").innerHTML = html;
-}
-
-async function getCount() {
-    try {
-        const resp = await fetch(`${API}/users/count`);
-
-        if (!resp.ok) {
-            throw new Error("Ошибка");
-        }
-
-        const data = await resp.json();
-
-        if (data.count !== undefined) {
-            showMessage(`👥 Всего пользователей: ${data.count}`);
-        } else if (typeof data === 'number') {
-            showMessage(`👥 Всего пользователей: ${data}`);
-        } else {
-            showMessage(`👥 Всего пользователей: ${Object.values(data)[0]}`);
-        }
-    } catch {
-        showMessage("Ошибка получения количества пользователей", true);
-    }
-}
-
+// ========== СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ (Задание 2) ==========
 async function createUser() {
-    const username = document.getElementById("newName").value.trim();
-    const password = document.getElementById("newPass").value;
-    const role = document.getElementById("newRole").value;
+    const username = document.getElementById("createName").value.trim();
+    const password = document.getElementById("createPass").value;
+    const role = document.getElementById("createRole").value;
 
-    if (!username || !password) {
-        showMessage("Заполните логин и пароль", true);
+    if (!username) {
+        showMessage("Введите логин", true);
         return;
     }
-    if (password.length < 6) {
+    if (!password || password.length < 6) {
         showMessage("Пароль минимум 6 символов", true);
         return;
     }
@@ -109,48 +96,40 @@ async function createUser() {
         });
 
         if (resp.ok) {
-            showMessage("✅ Пользователь успешно создан");
-            document.getElementById("newName").value = "";
-            document.getElementById("newPass").value = "";
-            getUsers();
+            showMessage("Пользователь успешно создан");
+            document.getElementById("createName").value = "";
+            document.getElementById("createPass").value = "";
+            loadUsers(); // Автообновление (Задание 2)
         } else {
             const err = await resp.json();
-            showMessage(err.detail || "Ошибка", true);
+            showMessage(err.detail || "Ошибка", true); // Задание 5
         }
     } catch {
         showMessage("Ошибка сервера", true);
     }
 }
 
-async function searchById() {
-    const id = document.getElementById("searchId").value;
-    if (!id) {
-        showMessage("Введите ID", true);
-        return;
-    }
-    try {
-        const resp = await fetch(`${API}/users/${id}`);
-        const div = document.getElementById("searchIdResult");
-        if (resp.ok) {
-            const u = await resp.json();
-            div.innerHTML = `<div class="result">✅ Найден: ${u.username} (ID: ${u.id}, Роль: ${u.role === 'admin' ? 'Админ' : 'Пользователь'})</div>`;
-        } else {
-            div.innerHTML = `<div class="result">❌ Пользователь с ID ${id} не найден</div>`;
+// ========== УДАЛЕНИЕ С ПОДТВЕРЖДЕНИЕМ (Задание 3) ==========
+async function deleteUserById(id) {
+    if (confirm("Вы уверены? OK / Cancel")) { // confirm
+        try {
+            const resp = await fetch(`${API}/users/${id}`, { method: "DELETE" });
+            if (resp.ok) {
+                showMessage("Пользователь удален");
+                loadUsers();
+            } else {
+                showMessage("Пользователь не найден", true);
+            }
+        } catch {
+            showMessage("Ошибка", true);
         }
-        setTimeout(() => div.innerHTML = "", 4000);
-    } catch {
-        showMessage("Ошибка", true);
     }
 }
 
-async function changePassword() {
-    const id = document.getElementById("changeId").value;
-    const newPass = document.getElementById("changePass").value;
-
-    if (!id || !newPass) {
-        showMessage("Заполните все поля", true);
-        return;
-    }
+// ========== ИЗМЕНЕНИЕ ПАРОЛЯ ==========
+async function openChangePass(id) {
+    const newPass = prompt("Введите новый пароль (мин 6 символов)");
+    if (!newPass) return;
     if (newPass.length < 6) {
         showMessage("Пароль минимум 6 символов", true);
         return;
@@ -171,10 +150,8 @@ async function changePassword() {
         });
 
         if (resp.ok) {
-            showMessage("✅ Пароль успешно изменен");
-            document.getElementById("changeId").value = "";
-            document.getElementById("changePass").value = "";
-            getUsers();
+            showMessage("Пароль изменен");
+            loadUsers();
         } else {
             showMessage("Ошибка", true);
         }
@@ -183,61 +160,52 @@ async function changePassword() {
     }
 }
 
-async function deleteUser() {
-    const id = document.getElementById("deleteId").value;
-    if (!id) {
-        showMessage("Введите ID", true);
-        return;
-    }
-    if (!confirm(`Удалить пользователя ID ${id}?`)) return;
+// ========== ПОИСК БЕЗ КНОПКИ (Задание 7) ==========
+searchInput.addEventListener("input", (e) => {
+    searchTerm = e.target.value;
+    renderUsers();
+});
 
-    try {
-        const resp = await fetch(`${API}/users/${id}`, { method: "DELETE" });
-        if (resp.ok) {
-            showMessage("✅ Пользователь удален");
-            document.getElementById("deleteId").value = "";
-            getUsers();
-        } else {
-            showMessage("Пользователь не найден", true);
-        }
-    } catch {
-        showMessage("Ошибка", true);
-    }
-}
+// ========== СОРТИРОВКА (Задание 8) ==========
+sortAscBtn.addEventListener("click", () => {
+    sortOrder = "asc";
+    renderUsers();
+});
 
-function quickDelete(id) {
-    document.getElementById("deleteId").value = id;
-    deleteUser();
-}
+sortDescBtn.addEventListener("click", () => {
+    sortOrder = "desc";
+    renderUsers();
+});
 
-function quickChange(id) {
-    document.getElementById("changeId").value = id;
-    document.getElementById("changePass").focus();
-    showMessage(`Введите новый пароль для ID ${id}`);
-}
-
-async function searchByText() {
-    const text = document.getElementById("searchText").value.trim();
-    if (!text) {
-        showMessage("Введите логин", true);
-        return;
-    }
-    try {
-        const resp = await fetch(`${API}/users/search?text=${encodeURIComponent(text)}`);
-        const found = await resp.json();
-        const div = document.getElementById("searchTextResult");
-        if (found.length > 0) {
-            let html = '<div class="result">✅ Найдено:<br>';
-            for (let u of found) {
-                html += `• ${u.username} (ID: ${u.id}, ${u.role === 'admin' ? 'Админ' : 'Пользователь'})<br>`;
-            }
-            html += '</div>';
-            div.innerHTML = html;
-        } else {
-            div.innerHTML = `<div class="result">❌ Не найдено: "${text}"</div>`;
-        }
-        setTimeout(() => div.innerHTML = "", 5000);
-    } catch {
-        showMessage("Ошибка", true);
+// ========== ТЁМНАЯ ТЕМА + localStorage (Задания 9 и 10) ==========
+function loadTheme() {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+        document.body.setAttribute("data-theme", savedTheme);
+        themeBtn.textContent = savedTheme === "dark" ? "☀️ Светлая тема" : "🌙 Темная тема";
     }
 }
+
+themeBtn.addEventListener("click", () => {
+    const currentTheme = document.body.getAttribute("data-theme");
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.body.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme); // Задание 10
+    themeBtn.textContent = newTheme === "dark" ? "☀️ Светлая тема" : "🌙 Темная тема";
+});
+
+// ========== ЗАЩИТА ОТ XSS ==========
+function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === "&") return "&amp;";
+        if (m === "<") return "&lt;";
+        if (m === ">") return "&gt;";
+        return m;
+    });
+}
+
+// ========== ЗАПУСК ==========
+loadTheme();
+loadUsers();
+createBtn.addEventListener("click", createUser);
