@@ -3,7 +3,6 @@ let users = [];
 let searchTerm = "";
 let sortOrder = "none"; // none, asc, desc
 
-// Элементы
 const usersContainer = document.getElementById("usersContainer");
 const searchInput = document.getElementById("searchInput");
 const createBtn = document.getElementById("createBtn");
@@ -12,7 +11,6 @@ const sortAscBtn = document.getElementById("sortAscBtn");
 const sortDescBtn = document.getElementById("sortDescBtn");
 const messageBox = document.getElementById("messageBox");
 
-// ========== СООБЩЕНИЯ ==========
 function showMessage(text, isError = false) {
     const msgDiv = document.createElement("div");
     msgDiv.className = `message ${isError ? "error" : "success"}`;
@@ -21,7 +19,6 @@ function showMessage(text, isError = false) {
     setTimeout(() => msgDiv.remove(), 3000);
 }
 
-// ========== ЗАГРУЗКА ПОЛЬЗОВАТЕЛЕЙ ==========
 async function loadUsers() {
     try {
         const resp = await fetch(`${API}/users`);
@@ -33,18 +30,15 @@ async function loadUsers() {
     }
 }
 
-// ========== ОТРИСОВКА КАРТОЧЕК (Задание 1) ==========
 function renderUsers() {
     let filteredUsers = [...users];
 
-    // Фильтрация (Задание 7)
     if (searchTerm) {
         filteredUsers = filteredUsers.filter(u =>
             u.username.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }
 
-    // Сортировка (Задание 8)
     if (sortOrder === "asc") {
         filteredUsers.sort((a, b) => a.username.localeCompare(b.username));
     } else if (sortOrder === "desc") {
@@ -73,7 +67,6 @@ function renderUsers() {
     usersContainer.innerHTML = html;
 }
 
-// ========== СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ (Задание 2) ==========
 async function createUser() {
     const username = document.getElementById("createName").value.trim();
     const password = document.getElementById("createPass").value;
@@ -109,7 +102,6 @@ async function createUser() {
     }
 }
 
-// ========== УДАЛЕНИЕ С ПОДТВЕРЖДЕНИЕМ (Задание 3) ==========
 async function deleteUserById(id) {
     if (confirm("Вы уверены? OK / Cancel")) { // confirm
         try {
@@ -126,7 +118,6 @@ async function deleteUserById(id) {
     }
 }
 
-// ========== ИЗМЕНЕНИЕ ПАРОЛЯ ==========
 async function openChangePass(id) {
     const newPass = prompt("Введите новый пароль (мин 6 символов)");
     if (!newPass) return;
@@ -160,13 +151,11 @@ async function openChangePass(id) {
     }
 }
 
-// ========== ПОИСК БЕЗ КНОПКИ (Задание 7) ==========
 searchInput.addEventListener("input", (e) => {
     searchTerm = e.target.value;
     renderUsers();
 });
 
-// ========== СОРТИРОВКА (Задание 8) ==========
 sortAscBtn.addEventListener("click", () => {
     sortOrder = "asc";
     renderUsers();
@@ -177,7 +166,6 @@ sortDescBtn.addEventListener("click", () => {
     renderUsers();
 });
 
-// ========== ТЁМНАЯ ТЕМА + localStorage (Задания 9 и 10) ==========
 function loadTheme() {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
@@ -194,7 +182,6 @@ themeBtn.addEventListener("click", () => {
     themeBtn.textContent = newTheme === "dark" ? "☀️ Светлая тема" : "🌙 Темная тема";
 });
 
-// ========== ЗАЩИТА ОТ XSS ==========
 function escapeHtml(str) {
     if (!str) return "";
     return str.replace(/[&<>]/g, function(m) {
@@ -205,7 +192,6 @@ function escapeHtml(str) {
     });
 }
 
-// ========== ЗАПУСК ==========
 loadTheme();
 loadUsers();
 createBtn.addEventListener("click", createUser);
